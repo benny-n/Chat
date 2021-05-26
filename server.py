@@ -6,6 +6,10 @@ from threading import Event
 number_of_connections = 0
 ready_to_accept = Event()
 
+def get_host_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(('8.8.8.8', 53))
+    return s.getsockname()[0]
 
 def handle_msg_from_client(conn):
     while True:
@@ -37,8 +41,8 @@ def make_connection_with_client(conn, addr):
 
 
 with socket.socket() as connection:
-    print("Host IP is: " + str((socket.gethostbyname(socket.gethostname()))))
-    connection.bind((socket.gethostbyname(socket.gethostname()), 5545))
+    print("Host IP is: " + str(get_host_ip()))
+    connection.bind((get_host_ip(), 5545))
     print("Waiting for new connections to the server!")
     connection.listen()
     while True:
