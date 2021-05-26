@@ -1,3 +1,4 @@
+import getpass
 import socket
 import threading
 from threading import Event
@@ -10,7 +11,7 @@ def handle_msg_from_client(conn):
     while True:
         msg_from_client = conn.recv(1024).decode()
         if msg_from_client:
-            print("\r" + socket.gethostname() + ": " + msg_from_client)
+            print("\r" + msg_from_client)
             print("\ryou: ", end='')
 
 
@@ -23,9 +24,10 @@ def make_connection_with_client(conn, addr):
         print('Connected by', addr)
         while True:
             threading.Thread(target=handle_msg_from_client, args=(conn,)).start()
-            input_data = input("ME: ")
+            input_data = input("you: ")
             if input_data:
-                conn.send(input_data.encode())
+                msg_to_send = getpass.getuser() + ": " + input_data
+                conn.send(msg_to_send.encode())
             else:
                 break
         print('Connection with ' + str(addr) + ' ended')
