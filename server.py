@@ -1,15 +1,19 @@
 import getpass
 import socket
 import threading
+import urllib.request
+from time import sleep
 from threading import Event
 
 number_of_connections = 0
 ready_to_accept = Event()
 
+
 def get_host_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(('8.8.8.8', 53))
     return s.getsockname()[0]
+
 
 def handle_msg_from_client(conn):
     while True:
@@ -19,8 +23,9 @@ def handle_msg_from_client(conn):
             print("\ryou: ", end='')
 
 
-def make_connection_with_client(conn, addr):
+def make_connection_with_client(sock_conn):
     global number_of_connections
+    conn, addr = sock_conn.accept()
     number_of_connections += 1
     if number_of_connections == 2:
         ready_to_accept.clear()
@@ -41,7 +46,8 @@ def make_connection_with_client(conn, addr):
 
 
 with socket.socket() as connection:
-    print("Host IP is: " + str(get_host_ip()))
+    external_ip = urllib.request.urlopen('https://api.ipify.org').read().decode()
+    print("External IP is: " + external_ip)
     connection.bind((get_host_ip(), 5545))
     print("Waiting for new connections to the server!")
     connection.listen()
@@ -51,6 +57,11 @@ with socket.socket() as connection:
             ready_to_accept.wait()
             print("Ready to accept more connections!")
         else:
-            threading.Thread(target=make_connection_with_client, args=connection.accept()).start()
+            threading.Thread(target=make_connection_with_client, args=(connection,)).start()
+            try:
+                while True:
+                    sleep(0.5)
+            except KeyboardInterrupt:
+                exit(0)
 
 
